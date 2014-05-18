@@ -252,7 +252,7 @@ static void build_pairing_cmd(struct l2cap_conn *conn,
 				req->io_capability, req->oob_flag,
 				req->auth_req, req->max_key_size,
 				req->init_key_dist, req->resp_key_dist);
-		req->auth_req = (authreq & AUTH_REQ_MASK);
+				req->auth_req = (authreq & AUTH_REQ_MASK);
 		return;
 	}
 
@@ -268,11 +268,12 @@ static void build_pairing_cmd(struct l2cap_conn *conn,
 	rsp->init_key_dist = req->init_key_dist & all_keys;
 	rsp->resp_key_dist = req->resp_key_dist & dist_keys;
 	rsp->auth_req = authreq;
+	rsp->auth_req = (authreq & AUTH_REQ_MASK);
 	BT_DBG("SMP_CMD_PAIRING_RSP %d %d %d %d %2.2x %2.2x",
 			req->io_capability, req->oob_flag, req->auth_req,
 			req->max_key_size, req->init_key_dist,
 			req->resp_key_dist);
-	rsp->auth_req = (authreq & AUTH_REQ_MASK);
+	
 }
 
 static u8 check_enc_key_size(struct l2cap_conn *conn, __u8 max_key_size)
@@ -872,19 +873,6 @@ int smp_sig_channel(struct l2cap_conn *conn, struct sk_buff *skb)
 
 	hcon->smp_conn = conn;
 	skb_pull(skb, sizeof(code));
-
-	/*
-	 * The SMP context must be initialized for all other PDUs except
-	 * pairing and security requests. If we get any other PDU when
-	 * not initialized simply disconnect (done if this function
-	 * returns an error).
-	 */
-	if (code != SMP_CMD_PAIRING_REQ && code != SMP_CMD_SECURITY_REQ &&
-	    !conn->smp_chan) {
-		BT_ERR("Unexpected SMP command 0x%02x. Disconnecting.", code);
-		kfree_skb(skb);
-		return -ENOTSUPP;
-	}
 
 	switch (code) {
 	case SMP_CMD_PAIRING_REQ:
