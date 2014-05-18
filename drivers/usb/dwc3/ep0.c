@@ -462,6 +462,9 @@ static int dwc3_ep0_handle_feature(struct dwc3 *dwc,
 			if (!dep)
 				return -EINVAL;
 
+			if (set == 0 && (dep->flags & DWC3_EP_WEDGE))
+				break;
+
 			if (!set && (dep->flags & DWC3_EP_WEDGE))
 				return 0;
 
